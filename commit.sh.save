@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Couleurs
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo -e "${BLUE}🛠️ Nettoyage des conflits potentiels...${NC}"
+# Annule tout rebase bloqué (ton erreur précédente)
+git rebase --abort > /dev/null 2>&1
+rm -fr ".git/rebase-merge" > /dev/null 2>&1
+
+echo -e "${BLUE}📦 Préparation des fichiers...${NC}"
+git add .
+
+# Demande le message de commit
+echo -e "${BLUE}📝 Message du commit (ex: Mise à jour API) :${NC}"
+read user_message
+if [ -z "$user_message" ]; then
+    user_message="Mise à jour du $(date +'%d/%m/%Y %H:%M')"
+fi
+
+# Commit
+git commit -m "$user_message"
+
+echo -e "${BLUE}🔄 Synchronisation avec GitHub (Pull)...${NC}"
+# Récupère les modifs distantes pour éviter les erreurs de push
+git pull origin main --rebase
+
+echo -e "${BLUE}📤 Envoi vers GitHub (Push)...${NC}"
+# Envoie sur la branche main
+git push origin main
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ Succès ! Tout est sur GitHub.${NC}"
+else
+    echo -e "${RED}❌ Erreur lors de l'envoi. Vérifie ta connexion ou tes droits.${NC}"
+fi
+
+cl
