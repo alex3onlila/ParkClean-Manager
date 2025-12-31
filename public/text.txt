@@ -1,0 +1,485 @@
+/**
+ * ParkClean Manager - Application Logic
+ * Consomme l'API définie dans routes.php
+ */
+
+const API_BASE = '/api';
+
+// --- Utilitaire Fetch Global ---
+const ParkCleanAPI = {
+    async request(endpoint, method = 'GET', data = null) {
+        try {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (data) options.body = JSON.stringify(data);
+            
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`Erreur API (${endpoint}):`, error);
+            this.notify("Une erreur est survenue lors de l'opération.", "danger");
+            return null;
+        }
+    },
+
+    notify(message, type = "info") {
+        // Simple alerte ou toast si vous avez un conteneur dédié
+        alert(`${type.toUpperCase()}: ${message}`);
+    }
+};
+
+// --- Initialisation Automatique selon la page ---
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitle = document.querySelector('h1')?.innerText.toLowerCase() || "";
+    
+    // Init theme toggle (reads localStorage and syncs icon)
+    if (typeof initThemeToggle === 'function') initThemeToggle();
+
+    if (document.getElementById('clientsTable')) loadEntities('clients');
+    if (document.getElementById('vehiclesTable')) loadEntities('vehicles');
+    if (document.getElementById('subscriptionTable')) loadEntities('abonnements');
+    if (document.getElementById('dailyTable')) loadEntities('entries'); // "daily" correspond aux entrées
+    if (document.getElementById('statDashboard')) loadDashboardStats();
+});
+
+// --- Gestion des Statistiques Dashboard ---
+async function loadDashboardStats() {
+    const stats = ['clients', 'vehicles', 'entries', 'abonnements'];
+    for (const entity of stats) {
+        const data = await ParkCleanAPI.request(`/${entity}/list.php`);
+        const el = document.getElementById(`stat${entity.charAt(0).toUpperCase() + entity.slice(1)}`);
+        if (el) el.innerText = Array.isArray(data) ? data.length : 0;
+    }
+}
+
+// --- Moteur de chargement des Tables (CRUD : Read) ---
+async function loadEntities(entity) {
+    const tableId = entity === 'entries' ? 'dailyTable' : `${entity}Table`;
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Chargement...</td></tr>';
+    const data = await ParkCleanAPI.request(`/${entity}/list.php`);
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune donnée trouvée</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map(item => renderRow(entity, item)).join('');
+}
+
+// --- Rendu des lignes selon l'entité ---
+function renderRow(entity, item) {
+    const actions = `
+        <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="openEditModal('${entity}', ${item.id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteEntity('${entity}', ${item.id})"><i class="bi bi-trash"></i></button>
+        </td>`;
+
+    switch (entity) {
+        case 'clients':
+            return `<tr><td>${item.id}</td><td>${item.nom} ${item.prenom}</td><td>${item.email || '-'}</td><td>${item.telephone || '-'}</td><td>${item.nbr_vehicules}</td>${actions}</tr>`;
+        case 'vehicles':
+            return `<tr><td>${item.id}</td><td><span class="badge bg-dark">${item.immatriculation}</span></td><td>${item.marque}</td><td>${item.client_nom || item.client_id}</td><td>${item.type_nom || 'Voiture'}</td>${actions}</tr>`;
+        case 'abonnements':
+            return `<tr><td>${item.id}</td><td>${item.immatriculation}</td><td>${item.date_debut}</td><td>${item.date_fin}</td><td>${item.montant_recu} €</td>${actions}</tr>`;
+        case 'entries':
+            return `<tr><td>${item.id}</td><td>${item.immatriculation}</td><td>${item.date_enregistrement}</td><td>${item.categorie}</td><td>${item.montant_recu} €</td>${actions}</tr>`;
+        default: return '';
+    }
+}
+
+// --- CRUD : Create / Update ---
+async function saveEntity(entity, formId) {
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Si ID présent -> Update, sinon -> Create
+    const endpoint = data.id ? `/${entity}/update.php` : `/${entity}/create.php`;
+    const result = await ParkCleanAPI.request(endpoint, 'POST', data);
+
+    if (result && result.success) {
+        ParkCleanAPI.notify("Enregistré avec succès !", "success");
+        // Fermer la modal (si utilisation de Bootstrap Modal)
+        const modalEl = document.querySelector('.modal.show');
+        if (modalEl) bootstrap.Modal.getInstance(modalEl).hide();
+        loadEntities(entity);
+    }
+}
+
+// --- CRUD : Delete ---
+async function deleteEntity(entity, id) {
+    if (!confirm("Voulez-vous vraiment supprimer cet élément ?")) return;
+
+    const result = await ParkCleanAPI.request(`/${entity}/delete.php`, 'POST', { id });
+    if (result && result.success) {
+        ParkCleanAPI.notify("Supprimé avec succès", "success");
+        loadEntities(entity);
+    }
+}
+
+// --- Gestion de l'authentification ---
+async function handleLogin(e) {
+    e.preventDefault();
+    const data = {
+        username: e.target.username.value,
+        password: e.target.password.value
+    };
+
+    const result = await ParkCleanAPI.request('/auth/login.php', 'POST', data);
+    if (result && result.success) {
+        window.location.href = '?page=dashboard';
+    } else {
+        ParkCleanAPI.notify("Identifiants incorrects", "danger");
+    }
+}
+
+// --- Menu et UI (Inchangé mais optimisé) ---
+const hamburger = document.getElementById('hamburger');
+const navOverlay = document.getElementById('navOverlay');
+
+const toggleNav = () => {
+    const open = document.getElementById('navMenu').classList.toggle('open');
+    hamburger.classList.toggle('active', open);
+    navOverlay?.classList.toggle('active', open);
+};
+
+hamburger?.addEventListener('click', toggleNav);
+navOverlay?.addEventListener('click', toggleNav);
+
+// --- Theme toggle (icon swap + persistent preference) ---
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('parkclean-theme', theme); } catch(e){}
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    if (!icon) return;
+    if (theme === 'dark') {
+        icon.className = 'bi bi-sun';
+        btn.title = 'Passer en mode clair';
+    } else {
+        icon.className = 'bi bi-moon-stars';
+        btn.title = 'Passer en mode sombre';
+    }
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    setTheme(next);
+}
+
+function initThemeToggle() {
+    const saved = (function(){ try { return localStorage.getItem('parkclean-theme'); } catch(e){ return null } })();
+    const prefer = saved || document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(prefer);
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleTheme();
+    });
+}
+
+// appelé au DOMContentLoaded : if (typeof initThemeToggle === 'function') initThemeToggle();
+
+
+// --- User menu toggle ---
+const userMenuBtn = document.getElementById('userMenu');
+const accountMenu = document.getElementById('accountMenu');
+const userWrap = document.querySelector('.user-wrap');
+
+function closeUserMenu() {
+    if (!userMenuBtn || !accountMenu) return;
+    userMenuBtn.setAttribute('aria-expanded', 'false');
+    accountMenu.setAttribute('aria-hidden', 'true');
+    if (userWrap) userWrap.classList.remove('open');
+    accountMenu.classList.remove('open');
+}
+
+function openUserMenu() {
+    if (!userMenuBtn || !accountMenu) return;
+    userMenuBtn.setAttribute('aria-expanded', 'true');
+    accountMenu.setAttribute('aria-hidden', 'false');
+    if (userWrap) userWrap.classList.add('open');
+    accountMenu.classList.add('open');
+}
+
+function toggleUserMenu(e) {
+    if (!userMenuBtn || !accountMenu) return;
+    const expanded = userMenuBtn.getAttribute('aria-expanded') === 'true';
+    if (expanded) closeUserMenu(); else openUserMenu();
+}
+
+userMenuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleUserMenu(e);
+});
+
+// Close when clicking outside
+document.addEventListener('click', (e) => {
+    if (!accountMenu || !userMenuBtn) return;
+    if (accountMenu.getAttribute('aria-hidden') === 'false') {
+        if (!userMenuBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+            closeUserMenu();
+        }
+    }
+});
+
+// Close on Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeUserMenu();
+});
+
+// --- Exports ---
+function exportData(type) {
+    const page = new URLSearchParams(window.location.search).get('page') || 'daily';
+    window.location.href = `/api/export/${type}.php?report=${page}`;
+}
+
+
+// --- Fonctions spécifiques au Module Clients ---
+
+/**
+ * Ouvre la modale pour l'ajout ou la modification
+ * @param {Object|null} client - Si null, mode création, sinon mode édition
+ */
+function openClientModal(client = null) {
+    const form = document.getElementById('clientForm');
+    const title = document.getElementById('modalTitle');
+    form.reset(); // Vide le formulaire
+
+    if (client) {
+        title.innerText = "Modifier le Client";
+        // Remplissage des champs selon le schéma DB
+        form.id.value = client.id;
+        form.nom.value = client.nom;
+        form.prenom.value = client.prenom;
+        form.email.value = client.email || '';
+        form.telephone.value = client.telephone || '';
+        form.image.value = client.image || '';
+    } else {
+        title.innerText = "Nouveau Client";
+        form.id.value = "";
+    }
+    
+    new bootstrap.Modal(document.getElementById('clientModal')).show();
+}
+
+/**
+ * Enregistre un client (Create ou Update)
+ */
+async function saveClient(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Détection auto du mode selon la présence de l'ID
+    const isUpdate = data.id && data.id !== "";
+    const endpoint = isUpdate ? '/clients/update.php' : '/clients/create.php';
+    
+    const result = await ParkCleanAPI.request(endpoint, 'POST', data);
+    
+    if (result && result.success) {
+        bootstrap.Modal.getInstance(document.getElementById('clientModal')).hide();
+        ParkCleanAPI.notify(isUpdate ? "Client mis à jour" : "Client créé", "success");
+        loadEntities('clients'); // Recharge la table
+    }
+}
+
+/**
+ * Filtre local de la table clients
+ */
+function filterClients() {
+    const query = document.getElementById('clientSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('#clientsTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+
+// Filtre générique pour les tables (texte ou select)
+function filterTable(tableId, inputId) {
+    const input = document.getElementById(inputId);
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    if (!input || rows.length === 0) return;
+
+    const val = (input.value || '').toString().toLowerCase();
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = (val === '' || text.includes(val)) ? '' : 'none';
+    });
+}
+
+// Ouvre la modale d'édition générique pour une entité en récupérant via l'API
+async function openEditModal(entity, id) {
+    if (!entity || !id) return;
+    const result = await ParkCleanAPI.request(`/${entity}/get.php`, 'POST', { id });
+    if (!result) return;
+
+    // Déléguer à la modal spécifique si elle existe
+    if (entity === 'clients' && typeof openClientModal === 'function') {
+        openClientModal(result);
+        return;
+    }
+    if (entity === 'vehicles' && typeof openVehicleModal === 'function') {
+        openVehicleModal(result);
+        return;
+    }
+
+    // Fallback : afficher dans la console si pas de modal dédiée
+    console.log('Edit entity', entity, result);
+    ParkCleanAPI.notify(`Édition non implémentée pour ${entity}`, 'info');
+}
+
+// Mise à jour de renderRow pour gérer les photos et le style premium
+/**
+ * Génère le HTML d'une ligne pour la table des clients
+ * @param {Object} item - L'objet client venant de l'API
+ * @returns {string} - Le code HTML de la ligne <tr>
+ */
+function renderClientRow(item) {
+    // Génération de l'avatar : 1. Image DB, 2. Avatar dynamique UI, 3. Fallback local
+    const avatarUrl = item.image && item.image.trim() !== "" 
+        ? item.image 
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nom)}+${encodeURIComponent(item.prenom)}&background=random&color=fff&size=128`;
+
+    // Génération des actions (Modifier / Supprimer) avec les bonnes icônes
+    const actions = `
+        <td class="text-end">
+            <div class="btn-group shadow-sm" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary" 
+                        onclick='openClientModal(${JSON.stringify(item)})' 
+                        title="Modifier">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" 
+                        onclick="deleteEntity('clients', ${item.id})" 
+                        title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </td>`;
+
+    return `
+    <tr class="align-middle">
+        <td><span class="text-muted fw-bold">#${item.id}</span></td>
+        <td>
+            <div class="d-flex align-items-center">
+                <img src="${avatarUrl}" 
+                     class="rounded-circle me-3 border shadow-sm" 
+                     width="40" height="40" 
+                     style="object-fit:cover"
+                     onerror="this.src='assets/images/default-avatar.png'">
+                <div>
+                    <div class="fw-bold text-dark">${item.nom} ${item.prenom}</div>
+                    <small class="text-muted text-uppercase" style="font-size: 0.7rem;">Client Fidèle</small>
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="small mb-1 text-truncate" style="max-width: 150px;">
+                <i class="bi bi-envelope text-muted me-2"></i>${item.email || '<span class="text-muted opacity-50">Aucun</span>'}
+            </div>
+            <div class="small text-primary fw-medium">
+                <i class="bi bi-telephone me-2"></i>${item.telephone || '-'}
+            </div>
+        </td>
+        <td class="text-center">
+            <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info px-3">
+                ${item.nbr_vehicules || 0} <i class="bi bi-car-front-fill ms-1"></i>
+            </span>
+        </td>
+        ${actions}
+    </tr>`;
+}
+
+/**
+ * Ouvre la modale véhicule et charge les clients/types en temps réel
+ */
+async function openVehicleModal(vehicle = null) {
+    const form = document.getElementById('vehicleForm');
+    const clientSelect = document.getElementById('clientSelect');
+    const typeSelect = document.getElementById('typeSelect');
+    const modalTitle = document.getElementById('vehicleModalLabel');
+
+    // 1. Chargement des Clients en temps réel depuis la DB
+    const clients = await ParkCleanAPI.request('/clients/list.php');
+    
+    // 2. Chargement des Types de véhicules (Voiture, Moto, etc.)
+    const types = await ParkCleanAPI.request('/vehicle_types/list.php');
+
+    // Remplissage dynamique du sélecteur de clients
+    if (clientSelect && clients) {
+        clientSelect.innerHTML = '<option value="">-- Choisir un client --</option>';
+        clients.forEach(client => {
+            clientSelect.innerHTML += `<option value="${client.id}">${client.nom} ${client.prenom}</option>`;
+        });
+    }
+
+    // Remplissage dynamique du sélecteur de types
+    if (typeSelect && types) {
+        typeSelect.innerHTML = '<option value="">-- Type de véhicule --</option>';
+        types.forEach(t => {
+            typeSelect.innerHTML += `<option value="${t.id}">${t.type} (${t.prix_lavage} €)</option>`;
+        });
+    }
+
+    // 3. Gestion Mode Ajout vs Mode Edition
+    form.reset();
+    if (vehicle) {
+        modalTitle.innerText = "Modifier le Véhicule";
+        // On remplit les champs avec les données existantes
+        form.id.value = vehicle.id;
+        form.client_id.value = vehicle.client_id;
+        form.type_id.value = vehicle.type_id;
+        form.marque.value = vehicle.marque;
+        form.immatriculation.value = vehicle.immatriculation;
+        form.image.value = vehicle.image || '';
+    } else {
+        modalTitle.innerText = "Nouveau Véhicule";
+        form.id.value = ""; // Mode création
+    }
+
+    // Affichage de la modale
+    new bootstrap.Modal(document.getElementById('vehicleModal')).show();
+}async function viewVehicleDetails(id) {
+    const vehicle = await ParkCleanAPI.request(`/vehicles/get.php?id=${id}`);
+    if (vehicle) {
+        // Exemple : Afficher dans une alerte ou une modale de détails
+        console.log(`Véhicule: ${vehicle.marque} (${vehicle.immatriculation})`);
+        console.log(`Propriétaire: ${vehicle.client_nom} ${vehicle.client_prenom}`);
+    }
+}
+
+// ================= APP LOADER =================
+document.addEventListener("DOMContentLoaded", () => {
+  const loader = document.getElementById("appLoader");
+
+  // Si déjà lancé une fois → pas de loader
+  if (localStorage.getItem("parkclean_launched")) {
+    loader?.remove();
+    return;
+  }
+
+  // Première fois seulement
+  loader.classList.remove("hidden");
+
+  setTimeout(() => {
+    loader.classList.add("fade-out");
+
+    setTimeout(() => {
+      loader.remove();
+      localStorage.setItem("parkclean_launched", "true");
+    }, 600);
+
+  }, 3000);
+});

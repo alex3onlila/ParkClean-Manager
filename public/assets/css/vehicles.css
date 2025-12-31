@@ -1,0 +1,94 @@
+/* assets/css/vehicles.css */
+#vehiclesTable th {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+#vehiclesTable td {
+  vertical-align: middle;
+}
+.font-monospace {
+  font-family: monospace;
+}
+.vehicle-thumb {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.vehicle-thumb {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+/* ================= VEHICLES ================= */
+
+#vehiclesTable tbody tr {
+  transition: background .15s ease;
+}
+
+#vehiclesTable tbody tr:hover {
+  background: rgba(13,110,253,.04);
+}
+
+.vehicle-thumb {
+  width: 42px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+/* Modal refinement */
+#vehicleModal .modal-content {
+  border-radius: 18px;
+}
+
+#vehicleModal .form-control,
+#vehicleModal .form-select {
+  border-radius: 12px;
+  padding: .6rem .75rem;
+}
+
+#vehicleModal label {
+  letter-spacing: .04em;
+}
+
+/* Actions buttons */
+.table .btn-outline-primary:hover {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.table .btn-outline-danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+.toast-container {
+  z-index: 2000;
+}
+
+.preview-img {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 4px;
+  background: #f8f9fa;
+}
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  #vehiclesTable th,
+  #vehiclesTable td {
+    font-size: 0.75rem;
+    padding: 0.4rem;
+  }
+  .vehicle-thumb {
+    width: 40px;
+    height: 30px;
+  }   
+  #vehicleModal .modal-content {
+    padding: 1rem;
+  }
+}/* ================= VEHICLES ================= */

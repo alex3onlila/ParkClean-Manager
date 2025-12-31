@@ -1,0 +1,48 @@
+/* Hérite de daily.css, voici les spécificités */
+
+:root {
+    --sub-active-bg: rgba(25, 135, 84, 0.1);
+    --sub-active-color: #198754;
+    --sub-expired-bg: rgba(220, 53, 69, 0.1);
+    --sub-expired-color: #dc3545;
+}
+
+/* Badges de Statut */
+.badge-status {
+    font-size: 0.75rem;
+    padding: 0.4em 0.8em;
+    border-radius: 50px; /* Plus arrondi que daily */
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge-active {
+    background-color: var(--sub-active-bg);
+    color: var(--sub-active-color);
+    border: 1px solid rgba(25, 135, 84, 0.2);
+}
+
+.badge-expired {
+    background-color: var(--sub-expired-bg);
+    color: var(--sub-expired-color);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* Le Modal automatique */
+#subModal .bg-light {
+    background-color: #f8fafc !important;
+    border: 1px dashed #cbd5e1 !important;
+}
+
+/* Animation sur le calcul du prix */
+@keyframes flashUpdate {
+    0% { background-color: rgba(13, 110, 253, 0.2); }
+    100% { background-color: white; }
+}
+
+.flash-update {
+    animation: flashUpdate 0.5s ease-out;
+}

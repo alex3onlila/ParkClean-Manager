@@ -1,0 +1,56 @@
+parkclean-manager/
+│
+├── api/
+│   ├── config/
+│   │   └── database.php
+│   ├── auth/
+│   │   └── login.php
+│   ├── vehicles/
+│   │   ├── create.php
+│   │   ├── list.php
+│   │   └── get.php
+│   ├── entries/
+│   │   ├── create.php
+│   │   ├── today.php
+│   │   └── exit.php
+│   ├── payments/
+│   │   └── create.php
+│   ├── reports/
+│   │   └── daily.php
+│   └── export/
+│       ├── pdf.php
+│       └── excel.php
+/public
+│
+├─ index.php
+│
+├─ pages/
+│   ├─ dashboard.php
+│   ├─ clients.php
+│   ├─ vehicles.php
+│   ├─ daily.php
+│   ├─ subscription.php
+│   └─ about.php
+│
+├─ partials/
+│   ├─ header.php
+│   └─ footer.php
+│
+├─ assets/
+│   ├─ css/style.css
+│   └─ /assets/js/
+        ├─ dashboard.js      → stats + derniers mouvements
+        ├─ clients.js        → CRUD clients (liste, ajout, suppression)
+        ├─ vehicles.js       → CRUD véhicules
+        ├─ daily.js          → journal des entrées
+        ├─ subscription.js   → gestion abonnements
+        ├─ profile.js        → profil utilisateur
+        ├─ settings.js       → préférences
+        └─ common.js         → fonctions utilitaires (fetch, loaders, notifications)
+
+│
+|
+|
+|
+└── database/
+    └── parkclean.db
