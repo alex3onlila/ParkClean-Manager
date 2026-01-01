@@ -69,46 +69,30 @@
     </div>
     
     <div class="table-responsive px-4 pb-4">
-      <table id="dailyTable" class="table table-hover align-middle mb-0">
-        <thead class="bg-gray-50/50">
-          <tr>
-            <th class="py-3 border-0 text-gray-400 uppercase small">Plaque d'Immatriculation</th>
-            <th class="py-3 border-0 text-gray-400 uppercase small">Catégorie</th>
-            <th class="py-3 border-0 text-gray-400 uppercase small">Versement</th>
-            <th class="py-3 border-0 text-gray-400 uppercase small">Horodatage</th>
-          </tr>
-        </thead>
-        <tbody class="border-top-0">
-          <tr>
-            <td colspan="4" class="text-center py-5">
-              <div class="spinner-border text-blue-600 spinner-border-sm me-2" role="status"></div>
-              <span class="text-gray-500 font-medium">Synchronisation des données...</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <table id="dailyTable" class="table table-hover align-middle mb-0">
+    <thead>
+      <tr class="text-uppercase small fw-bold text-muted border-bottom">
+        <th class="py-3">Heure</th>
+        <th class="py-3">Client & Véhicule</th>
+        <th class="py-3">Immatriculation</th>
+        <th class="py-3">Catégorie</th>
+        <th class="py-3">Finances</th>
+        <th class="py-3">Entrée</th>
+        <th class="py-3">Sortie</th>
+      </tr>
+    </thead>
+    <tbody class="border-top-0">
+      <tr>
+        <td colspan="7" class="text-center py-5">
+          <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+          <span class="text-muted font-medium">Synchronisation des données directes...</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
   </section>
 
 </div>
 
-<style>
-  /* Ajout d'une animation douce au chargement */
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  /* Style des cellules de tableau pour un look propre */
-  .table tbody td {
-    font-weight: 500;
-    color: #374151;
-    padding: 1.2rem 0.75rem;
-  }
-  .table thead th {
-    letter-spacing: 0.05em;
-  }
-</style>
+<link rel="stylesheet" href="assets/css/dashboard.css">
