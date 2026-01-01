@@ -1,37 +1,41 @@
 <?php
-declare(strict_types=1);
-require_once "../config/database.php";
-require_once "../utils/response.php";
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 
-// Validation de l'ID
-$id = (int)($_GET["id"] ?? 0);
-if (!$id) {
-    echo notFoundResponse("ID de véhicule manquant");
+// Chemin vers votre base de données (ajustez selon votre structure)
+$dbFile = __DIR__ . '/../../database/parkclean.db';
+
+try {
+    $pdo = new PDO("sqlite:" . $dbFile);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'error' => "Connexion échouée"]);
+    exit;
+}
+
+// Récupération de l'ID depuis l'URL (ex: get.php?id=3)
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($id <= 0) {
+    echo json_encode(['success' => false, 'error' => "ID invalide"]);
     exit;
 }
 
 try {
-    $sql = "
-      SELECT v.id, v.client_id, v.marque, v.immatriculation, v.type_id, v.image,
-             c.prenom, c.nom as client_nom,
-             t.type AS type_nom
-      FROM vehicles v
-      JOIN clients c ON v.client_id = c.id
-      JOIN vehicle_types t ON v.type_id = t.id
-      WHERE v.id = :id
-      LIMIT 1
-    ";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute([":id" => $id]);
-    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    // On récupère les colonnes exactes nécessaires pour vehicles.js
+    $stmt = $pdo->prepare("SELECT id, client_id, marque, immatriculation, type_id, image FROM vehicles WHERE id = ?");
+    $stmt->execute([$id]);
+    $vehicle = $stmt->fetch();
 
-    if ($data) {
-        // Ajouter client_prenom pour la compatibilité avec le JavaScript
-        $data['client_prenom'] = $data['prenom'];
-        echo formatItemResponse($data, "Véhicule trouvé");
-    } else {
-        echo notFoundResponse("Véhicule");
+    if (!$vehicle) {
+        echo json_encode(['success' => false, 'error' => "Véhicule introuvable"]);
+        exit;
     }
+
+    // On renvoie directement l'objet sans passer par formatItemResponse()
+    echo json_encode($vehicle);
+
 } catch (Exception $e) {
-    echo handleDatabaseError($e, "récupération du véhicule");
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }

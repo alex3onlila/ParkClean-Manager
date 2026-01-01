@@ -31,10 +31,6 @@ $types = $conn->query("SELECT id, type FROM vehicle_types ORDER BY type ASC")->f
     <button class="btn btn-primary shadow-sm px-4" onclick="openVehicleModal()">
       <i class="bi bi-plus-lg me-1"></i> Nouveau Véhicule
     </button>
-<button class="btn btn-outline-success shadow-sm px-4"
-        data-bs-toggle="modal" data-bs-target="#typeModal">
-  <i class="bi bi-plus-lg me-1"></i> Nouveau Type
-</button>
   </div>
 <br>
   <!-- Recherche / tri -->
@@ -155,32 +151,5 @@ $types = $conn->query("SELECT id, type FROM vehicle_types ORDER BY type ASC")->f
 
 <!-- Bootstrap JS (nécessaire pour Modal et Toast) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Modal pour les types de véhicules -->
-<div class="modal fade" id="typeModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form id="typeForm" class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-success text-white border-0">
-        <h5 class="modal-title fw-bold" id="typeModalLabel">
-          <i class="bi bi-plus-lg me-2"></i>Nouveau Type de Véhicule
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label small fw-bold text-uppercase text-muted">Nom du type</label>
-            <input type="text" name="type" class="form-control" placeholder="ex: Utilitaire, Berline, SUV..." required>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer border-0 bg-light p-3">
-        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Annuler</button>
-        <button type="submit" class="btn btn-success px-4 fw-bold">Ajouter</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Main Script -->
 <script src="assets/js/vehicles.js" defer></script>
