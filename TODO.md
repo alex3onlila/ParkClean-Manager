@@ -1,30 +1,66 @@
-# Plan de nettoyage clients.css
+# Plan de Modernisation - ParkClean Manager
 
-## Problèmes identifiés :
-1. **Doublons massifs** : Les mêmes règles CSS sont répétées plusieurs fois
-2. **Valeurs incohérentes** : Mêmes classes avec des valeurs différentes 
-3. **Commentaires redondants** : Multiples blocs de commentaires identiques
-4. **Approches mixtes** : Variables CSS vs valeurs codées en dur
-5. **Styles de toast multiples** : 3+ implémentations différentes
-6. **Avatars/images** : 5+ définitions pour les mêmes éléments
+## État actuel analysé :
+- Application PHP + SQLite pour gestion de parking
+- Structure basique avec API REST, pages publiques, base de données
+- CSS moderne avec variables et thème sombre
+- Fonctionnalités : clients, véhicules, entrées journalières, abonnements
+- Problèmes : schéma SQL corrompu, code procédural, sécurité à améliorer
 
-## Sections à consolider :
-1. **Avatar/Image** : client-avatar, client-thumb, client-initials, avatar-box
-2. **Tableau** : .table, .table td, styles de ligne
-3. **Toast/Notifications** : clients-toast, pc-toast
-4. **Boutons** : btn-light-custom, .btn-action-group
-5. **Responsive** : @media queries multiples
+## Plan de transformation professionnelle :
 
-## Améliorations à apporter :
-- Structure logique et organisée
-- Naming consistent (kebab-case)
-- Variables CSS pour la cohérence
-- Optimisation des performances
-- Code maintenable
-- Suppression des redondances
+### 1. Nettoyage et correction de la base de données
+- [ ] Réparer le schéma SQL (supprimer commentaires erronés, corriger clés étrangères)
+- [ ] Ajouter contraintes d'intégrité et indexes
+- [ ] Créer migrations propres et script de setup fiable
+- [ ] Nettoyer les données de test et ajouter seeding cohérent
 
-## Étapes :
-1. ✅ Analyse du fichier existant
-2. 🔄 Planification du nettoyage
-3. ⏳ Implémentation de la version nettoyée
-4. ⏳ Tests et validation
+### 2. Modernisation du code PHP (garder la logique existante)
+- [ ] Adopter PSR-4 et autoloading basique
+- [ ] Créer classes modèles (Client, Vehicle, Entry, etc.) avec logique métier
+- [ ] Améliorer sécurité : prepared statements partout, validation input
+- [ ] Centraliser gestion erreurs et réponses API
+- [ ] Ajouter Composer pour dépendances (monolog pour logs, etc.)
+
+### 3. Amélioration de l'interface utilisateur
+- [ ] Nettoyer et unifier les CSS (supprimer doublons comme dans TODO existant)
+- [ ] Améliorer animations et transitions modernes
+- [ ] Corriger accessibilité (ARIA labels, responsive)
+- [ ] Unifier design system et composants
+
+### 4. Sécurité et performance
+- [ ] Implémenter protection CSRF sur formulaires
+- [ ] Ajouter rate limiting basique sur API
+- [ ] Optimiser requêtes SQL (indexes, jointures)
+- [ ] Logs structurés avec Monolog
+
+### 5. Tests et qualité
+- [ ] Tests unitaires basiques avec PHPUnit
+- [ ] Tests API avec assertions sur réponses
+- [ ] Linting PHP (PHPCS pour style)
+- [ ] Validation input côté serveur renforcée
+
+### 6. Déploiement et DevOps
+- [ ] Docker basique pour développement
+- [ ] Améliorer Makefile et scripts bash
+- [ ] Script de déploiement simple
+- [ ] Environnements (dev/prod) avec variables
+
+### 7. Documentation et finalisation
+- [ ] README amélioré avec installation/déploiement
+- [ ] Documentation API basique
+- [ ] Guide contribution et architecture
+- [ ] Tests finaux et optimisation
+
+## Priorités :
+1. Corriger base de données (bloquant)
+2. Sécuriser le code PHP
+3. Nettoyer l'UI/CSS
+4. Ajouter tests basiques
+5. Documentation
+
+## Notes importantes :
+- Garder la logique métier existante
+- Améliorer sans casser les fonctionnalités
+- Maintenir compatibilité avec l'existant
+- Tests à chaque étape critique
