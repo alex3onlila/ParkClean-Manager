@@ -166,6 +166,12 @@ async function handleSubSubmit(e) {
     const isUpdate = data.id && data.id !== "";
     const url = isUpdate ? '../api/abonnements/update.php' : '../api/abonnements/create.php';
 
+    // Afficher le toast de chargement
+    let loadingToast = null;
+    if (typeof ParkCleanAPI !== 'undefined') {
+        loadingToast = ParkCleanAPI.showLoading('Enregistrement en cours...');
+    }
+
     try {
         const res = await fetch(url, {
             method: 'POST',
@@ -173,15 +179,34 @@ async function handleSubSubmit(e) {
             body: JSON.stringify(data)
         });
         const result = await res.json();
+        
+        if (loadingToast) ParkCleanAPI.hideLoading();
 
         if (result.success) {
             bootstrap.Modal.getInstance(document.getElementById('subModal')).hide();
             loadSubscriptions();
+            const message = isUpdate ? 'Abonnement modifié avec succès !' : 'Nouvel abonnement créé avec succès !';
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(message, 'success');
+            } else {
+                alert(message);
+            }
         } else {
-            alert("Erreur : " + result.message);
+            const errorMsg = "Erreur : " + (result.message || "Erreur inconnue");
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
         }
     } catch (error) {
-        alert("Erreur lors de la communication avec le serveur.");
+        if (loadingToast) ParkCleanAPI.hideLoading();
+        const errorMsg = "Erreur lors de la communication avec le serveur.";
+        if (typeof ParkCleanAPI !== 'undefined') {
+            ParkCleanAPI.showToast(errorMsg, 'danger');
+        } else {
+            alert(errorMsg);
+        }
     }
 }
 
@@ -212,6 +237,11 @@ async function editSub(id) {
 async function deleteSub(id) {
     if (!confirm("Voulez-vous vraiment supprimer cet abonnement ?")) return;
 
+    let loadingToast = null;
+    if (typeof ParkCleanAPI !== 'undefined') {
+        loadingToast = ParkCleanAPI.showLoading('Suppression en cours...');
+    }
+
     try {
         const res = await fetch('../api/abonnements/delete.php', {
             method: 'POST',
@@ -219,9 +249,30 @@ async function deleteSub(id) {
             body: JSON.stringify({ id: id })
         });
         const result = await res.json();
-        if (result.success) loadSubscriptions();
+        
+        if (loadingToast) ParkCleanAPI.hideLoading();
+        
+        if (result.success) {
+            loadSubscriptions();
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast('Abonnement supprimé avec succès', 'success');
+            }
+        } else {
+            const errorMsg = result.message || 'Erreur lors de la suppression';
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
+        }
     } catch (error) {
-        alert("Erreur lors de la suppression.");
+        if (loadingToast) ParkCleanAPI.hideLoading();
+        const errorMsg = "Erreur lors de la suppression.";
+        if (typeof ParkCleanAPI !== 'undefined') {
+            ParkCleanAPI.showToast(errorMsg, 'danger');
+        } else {
+            alert(errorMsg);
+        }
     }
 }
 

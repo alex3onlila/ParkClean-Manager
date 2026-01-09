@@ -140,4 +140,4 @@
     </div>
 </div>
 
-<script src="assets/js/daily.js"></script>
+<script src="../assets/js/daily.js"></script>

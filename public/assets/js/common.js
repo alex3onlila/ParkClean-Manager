@@ -46,42 +46,106 @@ const ParkCleanAPI = {
     },
 
     notify(message, type = "info") {
-        // Utilisation d'un système de toast si disponible
-        const toastContainer = document.getElementById('toastContainer');
-        if (toastContainer && typeof bootstrap !== 'undefined') {
-            this.showToast(message, type, toastContainer);
-        } else {
-            // Fallback pour les alertes
-            alert(`${type.toUpperCase()}: ${message}`);
-        }
+        this.showToast(message, type);
     },
 
-    showToast(message, type, container) {
+    showToast(message, type = 'info', duration = 4000) {
+        // Créer le conteneur de toast s'il n'existe pas
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+
         const bgClass = {
             success: 'text-bg-success',
-            danger: 'text-bg-danger', 
+            danger: 'text-bg-danger',
             warning: 'text-bg-warning',
-            info: 'text-bg-info'
+            info: 'text-bg-primary'
         }[type] || 'text-bg-primary';
 
+        const icons = {
+            success: 'bi-check-circle-fill',
+            danger: 'bi-exclamation-circle-fill',
+            warning: 'bi-exclamation-triangle-fill',
+            info: 'bi-info-circle-fill'
+        }[type] || 'bi-info-circle-fill';
+
+        const toastId = 'toast_' + Date.now();
         const toastHtml = `
-            <div class="toast align-items-center ${bgClass} border-0" role="alert">
+            <div id="${toastId}" class="toast align-items-center ${bgClass} border-0 shadow-lg" role="alert">
                 <div class="d-flex">
-                    <div class="toast-body">${this.escapeHtml(message)}</div>
+                    <div class="toast-body">
+                        <i class="bi ${icons} me-2"></i>
+                        ${this.escapeHtml(message)}
+                    </div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         `;
 
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = toastHtml;
-        const toastEl = tempDiv.firstElementChild;
-        container.appendChild(toastEl);
-        
-        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
-        toast.show();
-        
-        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        const toastEl = document.getElementById(toastId);
+
+        if (typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(toastEl, { delay: duration });
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        } else {
+            // Fallback si Bootstrap n'est pas chargé
+            setTimeout(() => {
+                toastEl.remove();
+            }, duration);
+        }
+    },
+
+    // Afficher un toast de chargement
+    showLoading(message = 'Chargement...') {
+        let container = document.getElementById('toastLoadingContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastLoadingContainer';
+            container.className = 'position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+
+        const toastId = 'toast_loading_' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-bg-primary border-0 shadow-lg" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        ${this.escapeHtml(message)}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        const toastEl = document.getElementById(toastId);
+
+        if (typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(toastEl, { autohide: false });
+            toast.show();
+        }
+
+        return toastEl;
+    },
+
+    // Masquer le toast de chargement
+    hideLoading() {
+        const loadingToasts = document.querySelectorAll('#toastLoadingContainer .toast');
+        loadingToasts.forEach(toast => {
+            if (typeof bootstrap !== 'undefined') {
+                const bsToast = bootstrap.Toast.getInstance(toast);
+                if (bsToast) bsToast.hide();
+            }
+            toast.remove();
+        });
     },
 
     escapeHtml(text) {

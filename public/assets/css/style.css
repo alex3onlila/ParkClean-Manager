@@ -151,27 +151,7 @@ tbody tr:hover td{
   transform: translateY(-1px);
 }
 
-/* ===================== Footer ===================== */
-.footer{
-  background: var(--surface);
-  padding:28px 18px;
-  border-top:1px solid var(--border);
-}
-.footer-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:16px;
-}
-.footer h4{font-size:13px;margin-bottom:6px}
-.footer a{
-  color:var(--muted);
-  font-size:13px;
-  text-decoration:none;
-  margin-bottom:6px;
-  display:block;
-}
-.footer a:hover{color:var(--accent)}
-.footer-bottom{margin-top:12px;text-align:center;font-size:12px;color:var(--muted)}
+
 
 /* ===================== Utilities ===================== */
 .flex{display:flex}

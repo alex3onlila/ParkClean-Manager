@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-REPO_URL="https://github.com/alex3onlila/ParkClean-Manager.git"
+REPO_URL="https://github.com/alex3onlila/Ecole-internationale-chinoise.git"
 
 echo "🚀 Préparation de l'envoi vers GitHub..."
 

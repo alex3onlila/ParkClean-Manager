@@ -49,6 +49,9 @@ async function loadVehicles() {
     const tbody = document.getElementById('vehiclesTableBody');
     if (!tbody) return;
 
+    // Show loading state
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Chargement des véhicules...</td></tr>';
+
     try {
         const response = await fetch(API_URLS.list);
         vehiclesData = await response.json();
@@ -56,6 +59,9 @@ async function loadVehicles() {
     } catch (error) {
         console.error('Erreur chargement:', error);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Erreur de communication avec le serveur</td></tr>';
+        if (typeof ParkCleanAPI !== 'undefined') {
+            ParkCleanAPI.showToast('Erreur lors du chargement des véhicules', 'danger');
+        }
     }
 }
 
@@ -110,7 +116,14 @@ window.editVehicle = async function(id) {
         const response = await fetch(`${API_URLS.get}?id=${id}`);
         const vehicle = await response.json();
 
-        if (vehicle.error) return alert(vehicle.error);
+        if (vehicle.error) {
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(vehicle.error, 'danger');
+            } else {
+                alert(vehicle.error);
+            }
+            return;
+        }
 
         const form = document.getElementById('vehicleForm');
         
@@ -146,18 +159,45 @@ async function handleVehicleSubmit(event) {
     const isUpdate = formData.get('id') !== "";
     const url = isUpdate ? API_URLS.update : API_URLS.create;
 
+    // Show loading state
+    let loadingToast = null;
+    if (typeof ParkCleanAPI !== 'undefined') {
+        loadingToast = ParkCleanAPI.showLoading('Enregistrement en cours...');
+    }
+
     try {
         const res = await fetch(url, { method: 'POST', body: formData });
         const result = await res.json();
-        
+
+        if (loadingToast) ParkCleanAPI.hideLoading();
+
         if (result.success) {
+            const message = isUpdate ? 'Véhicule modifié avec succès !' : 'Véhicule ajouté avec succès !';
             bootstrap.Modal.getInstance(document.getElementById('vehicleModal')).hide();
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(message, 'success');
+            } else {
+                alert(message);
+            }
             loadVehicles();
             form.reset();
         } else {
-            alert("Erreur: " + (result.message || result.error));
+            const errorMsg = "Erreur: " + (result.message || result.error);
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
         }
-    } catch (e) { console.error("Erreur submit:", e); }
+    } catch (e) {
+        if (loadingToast) ParkCleanAPI.hideLoading();
+        console.error("Erreur submit:", e);
+        if (typeof ParkCleanAPI !== 'undefined') {
+            ParkCleanAPI.showToast('Erreur lors de l\'enregistrement', 'danger');
+        } else {
+            alert('Erreur lors de l\'enregistrement');
+        }
+    }
 }
 
 window.openVehicleModal = function() {
@@ -176,6 +216,13 @@ window.openVehicleModal = function() {
 
 window.deleteVehicle = async function(id) {
     if (!confirm('Voulez-vous vraiment supprimer ce véhicule ?')) return;
+
+    // Show loading state
+    let loadingToast = null;
+    if (typeof ParkCleanAPI !== 'undefined') {
+        loadingToast = ParkCleanAPI.showLoading('Suppression en cours...');
+    }
+
     try {
         const res = await fetch(API_URLS.delete, {
             method: 'POST',
@@ -183,8 +230,33 @@ window.deleteVehicle = async function(id) {
             body: JSON.stringify({ id })
         });
         const result = await res.json();
-        if (result.success) loadVehicles();
-    } catch (e) { console.error("Erreur delete:", e); }
+
+        if (loadingToast) ParkCleanAPI.hideLoading();
+
+        if (result.success) {
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast('Véhicule supprimé avec succès', 'success');
+            } else {
+                alert('Véhicule supprimé avec succès');
+            }
+            loadVehicles();
+        } else {
+            const errorMsg = result.message || 'Erreur lors de la suppression';
+            if (typeof ParkCleanAPI !== 'undefined') {
+                ParkCleanAPI.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
+        }
+    } catch (e) {
+        if (loadingToast) ParkCleanAPI.hideLoading();
+        console.error("Erreur delete:", e);
+        if (typeof ParkCleanAPI !== 'undefined') {
+            ParkCleanAPI.showToast('Erreur de connexion', 'danger');
+        } else {
+            alert('Erreur de connexion');
+        }
+    }
 };
 
 // --- UTILITAIRES ---

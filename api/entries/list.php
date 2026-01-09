@@ -7,13 +7,18 @@ require_once __DIR__ . '/../config/database.php';
 try {
     // 1. Détermination de la date cible (soit par recherche, soit aujourd'hui)
     $targetDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+    
+    // 2. Nombre de jours à inclure (par défaut 7 jours pour le dashboard)
+    $days = isset($_GET['days']) ? intval($_GET['days']) : 7;
 
-    // 2. Définition de la plage horaire métier : 06h00 à 05h59
+    // 3. Définition de la plage horaire métier : 06h00 à 05h59
+    // La plage commence $days jours avant la date cible
     $startDt = new DateTime($targetDate);
+    $startDt->modify("-{$days} days");
     $startDt->setTime(6, 0, 0);
 
-    $endDt = clone $startDt;
-    $endDt->modify('+1 day')->setTime(5, 59, 59);
+    $endDt = new DateTime($targetDate);
+    $endDt->setTime(5, 59, 59); // Jour cible à 05h59
 
     // 3. Requête SQLite avec groupement logique par journée
     // Utilisation de || pour la concaténation SQLite

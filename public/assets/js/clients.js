@@ -290,18 +290,23 @@ function normalizeImage(val) {
 }
 
 
-// Toast helper
+// Toast helper - Utilise le système unifié ParkCleanAPI
 function showToast(message, type = 'info', duration = 3500) {
-  const t = document.getElementById('clientsToast');
-  if (!t) { alert(message); return; }
-  t.className = `pc-toast show ${type}`;
-  t.textContent = message;
-  t.hidden = false;
-  clearTimeout(t._hideTimer);
-  t._hideTimer = setTimeout(() => {
-    t.classList.remove('show');
-    t.hidden = true;
-  }, duration);
+  if (typeof ParkCleanAPI !== 'undefined' && ParkCleanAPI.showToast) {
+    ParkCleanAPI.showToast(message, type, duration);
+  } else {
+    // Fallback vers l'élément toast existant
+    const t = document.getElementById('clientsToast');
+    if (!t) { alert(message); return; }
+    t.className = `pc-toast show ${type}`;
+    t.textContent = message;
+    t.hidden = false;
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => {
+      t.classList.remove('show');
+      t.hidden = true;
+    }, duration);
+  }
 }
 
 // Avatar helpers

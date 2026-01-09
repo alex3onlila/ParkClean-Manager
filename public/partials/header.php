@@ -32,10 +32,21 @@
 
         <div id="accountMenu" class="account-menu" role="menu" aria-hidden="true" aria-labelledby="userMenu">
           <div class="account-profile">
-            <div class="avatar"><?= strtoupper(substr($_SESSION['user']['name'] ?? 'U',0,2)) ?></div>
+            <div id="userAvatar" class="avatar">
+              <?php 
+                // Afficher les initiales de l'utilisateur
+                $userName = $_SESSION['user']['name'] ?? 'U';
+                $userInitial = strtoupper(substr($userName, 0, 2));
+                echo htmlspecialchars($userInitial);
+              ?>
+            </div>
             <div>
-              <strong><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Utilisateur') ?></strong><br>
-              <?= htmlspecialchars($_SESSION['user']['email'] ?? 'email@parkclean.com') ?>
+              <strong id="userNameDisplay">
+                <?= htmlspecialchars($_SESSION['user']['name'] ?? 'Utilisateur') ?>
+              </strong><br>
+              <span id="userEmailDisplay" class="small text-muted">
+                <?= htmlspecialchars($_SESSION['user']['email'] ?? 'email@parkclean.com') ?>
+              </span>
             </div>
           </div>
           <div class="account-actions">
@@ -44,6 +55,32 @@
           </div>
         </div>
       </div>
+
+      <!-- Script pour charger les données utilisateur via API si session incomplète -->
+      <script>
+      (function() {
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const userAvatar = document.getElementById('userAvatar');
+
+        // Si les données sont déjà complètes, ne rien faire
+        const currentName = userNameDisplay?.textContent?.trim();
+        if (currentName && currentName !== 'Utilisateur') return;
+
+        // Sinon, charger via API
+        fetch('/api/users/list.php')
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.length > 0) {
+              const user = data[0];
+              if (userNameDisplay) userNameDisplay.textContent = user.name || 'Utilisateur';
+              if (userEmailDisplay) userEmailDisplay.textContent = user.email || 'email@parkclean.com';
+              if (userAvatar) userAvatar.textContent = (user.name || 'U').substring(0, 2).toUpperCase();
+            }
+          })
+          .catch(err => console.log('Impossible de charger les données utilisateur'));
+      })();
+      </script>
 
       <!-- HAMBURGER -->
       <button class="hamburger" id="hamburger" aria-label="Menu">
