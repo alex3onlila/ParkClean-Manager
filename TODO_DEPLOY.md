@@ -53,5 +53,6 @@ echo "✅ Projet mis à jour sur GitHub !"
 ## Actions
 - [x] Lire le fichier deploy.sh actuel
 - [x] Modifier deploy.sh avec le nouveau contenu
-- [ ] Tester le script
+- [x] Vérifier s'il y a des changements (pas de commit si working tree clean)
+- [x] Synchroniser automatiquement avec git pull --rebase
 

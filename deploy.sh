@@ -15,6 +15,13 @@ fi
 echo "📁 Fichiers modifiés :"
 git status
 
+# Vérifier s'il y a des changements
+if [ -z "$(git status --porcelain)" ]; then
+    echo "⚠️  Aucun changement à commiter. Working tree clean."
+    echo "✅ Projet déjà à jour sur GitHub !"
+    exit 0
+fi
+
 # Ajouter tous les fichiers
 git add .
 
@@ -24,6 +31,10 @@ echo "📝 Message de commit : $commit_message"
 
 # Commit
 git commit -m "$commit_message"
+
+# Synchroniser avec le remote (pull --rebase pour éviter les conflits)
+echo "🔄 Synchronisation avec le remote..."
+git pull --rebase origin main
 
 # Pousser vers la branche principale
 git branch -M main
