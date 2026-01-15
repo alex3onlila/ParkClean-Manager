@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-REPO_URL="https://github.com/alex3onlila/Ecole-internationale-chinoise.git"
+REPO_URL="https://github.com/alex3onlila/ParkClean-Manager.git"
 
 echo "🚀 Préparation de l'envoi vers GitHub..."
 
@@ -11,12 +11,18 @@ if [ ! -d ".git" ]; then
     git remote add origin $REPO_URL
 fi
 
-# Ajouter les fichiers
+# Afficher les fichiers modifiés
+echo "📁 Fichiers modifiés :"
+git status
+
+# Ajouter tous les fichiers
 git add .
 
-# Demander le message de commit
-echo "📝 Entrez votre message de commit :"
-read commit_message
+# Générer message de commit automatique avec date et heure
+commit_message="Update: $(date '+%Y-%m-%d %H:%M')"
+echo "📝 Message de commit : $commit_message"
+
+# Commit
 git commit -m "$commit_message"
 
 # Pousser vers la branche principale
